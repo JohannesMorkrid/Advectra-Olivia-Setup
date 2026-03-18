@@ -7,8 +7,7 @@ Allocate a GPU compatible partition:
 ```bash
   salloc -N 1 -A <project_number> --mem 200G -t 600 -p accel --gpus-per-node=1
 ```
-
-Run instantiate.sh on a ***accel partition***, check that it is executable, to ensure all packages are installed and pre-compiled:
+Run instantiate.sh from the repo directory on a ***accel partition***, check that it is executable, to ensure all packages are installed and pre-compiled:
 ```bash
   ./instantiate.sh
 ```
