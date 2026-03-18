@@ -1,0 +1,6 @@
+[deps]
+Advectra = "18c2cdae-170a-11f1-a6b3-2fcf687df0ab"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+
+[sources]
+Advectra = {rev = "main", url = "https://github.com/JohannesMorkrid/Advectra.jl.git"}
