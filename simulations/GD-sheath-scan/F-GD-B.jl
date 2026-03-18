@@ -38,7 +38,7 @@ end
 parameters = (κ=κ, ζ=1e-3, σ=1e-3, ν=1e-4, μ=1e-4)
 
 # Time intervalparameters
-tspan = [0.0, 100_000] # 10_000_000.0]
+tspan = [0.0, 1_000_000] # 10_000_000.0]
 
 # Diagnostics
 diagnostics = @diagnostics [
