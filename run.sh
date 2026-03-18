@@ -4,8 +4,8 @@
 #SBATCH --gpus-per-node=1            # Number of GPUs per node (max of 32)
 #SBATCH --mem=200G
 #SBATCH --ntasks-per-node=1          # Use one task for one GPU
-#SBATCH --output=output-%j
-#SBATCH --error=error-%j
+#SBATCH --output=outputs/output-%j
+#SBATCH --error=errors/error-%j
 #SBATCH --time=01:00:00              # time limit
 
 script=${1:-"simulations/script.jl"}
