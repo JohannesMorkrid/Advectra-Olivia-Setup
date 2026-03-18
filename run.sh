@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1          # Use one task for one GPU
 #SBATCH --output=outputs/output-%j
 #SBATCH --error=errors/error-%j
-#SBATCH --time=01:00:00              # time limit
+#SBATCH --time=04:00:00              # time limit
 
 script=${1:-"simulations/script.jl"}
 
