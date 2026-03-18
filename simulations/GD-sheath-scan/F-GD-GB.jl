@@ -60,7 +60,7 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
 #inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
 
 # Output
-output = Output(prob; filename="data/GD-sheath-scan/F-GD-GB.h5", 
+output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/F-GD-GB.h5", 
     simulation_name=:parameters, resume=true, #physical_transform=inverse_transformation!, 
     storage_limit="50 GB")
 
