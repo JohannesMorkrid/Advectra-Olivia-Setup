@@ -20,3 +20,11 @@ Modify the script.jl and run.sh to your liking and then submit it to slurm using
 ```
 
 Currently the normal terminal log is logged to the error-* file.
+
+## If Vscode Server hangs on Olivia
+
+ssh through a normal terminal and run
+
+```bash
+  pkill -u $USER -f vscode-server
+```
