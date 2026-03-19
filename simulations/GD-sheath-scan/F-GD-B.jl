@@ -50,6 +50,7 @@ diagnostics = @diagnostics [
     cfl(; stride=5000, silent=true),
     sample_density(; storage_limit="15 GB"),
     sample_vorticity(; storage_limit="15 GB"),
+    sample_potential(; storage_limit="15 GB"),
 ]
 
 # Collection of specifications defining the problem to be solved
