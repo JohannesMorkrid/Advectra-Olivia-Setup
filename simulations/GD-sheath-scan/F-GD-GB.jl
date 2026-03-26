@@ -35,7 +35,7 @@ end
 
 # Parameters
 κ = 1e-2
-parameters = (κ=κ, ζ=1e-1, σ=1e-1, ν=1e-2, μ=1e-2)
+parameters = (κ=κ, ζ=1e-1, σ=1e-2, ν=1e-2, μ=1e-2)
 
 # Time intervalparameters
 tspan = [0.0, 100_000] # 10_000_000.0]
