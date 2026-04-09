@@ -33,10 +33,6 @@ function NonLinear(du, u, operators, p, t)
     CUDA.@allowscalar dΩ[1] = 0
 end
 
-# Parameters
-κ = 1e-2
-parameters = (κ=κ, ζ=1e-3, σ=1e-4, ν=1e-4, μ=1e-4)
-
 # Time intervalparameters
 tspan = [0.0, 1_000_000] # 10_000_000.0]
 
@@ -53,19 +49,28 @@ diagnostics = @diagnostics [
     sample_potential(; storage_limit="15 GB"),
 ]
 
-# Collection of specifications defining the problem to be solved
-prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=1e-1,
-    operators=:all, diagnostics=diagnostics)
+sigmas = [1e-4, 2e-4, 5e-4, 1e-3]
 
-# Inverse transform
-#inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
+for σ in sigmas
+    # Parameters
+    κ = 1e-2
+    parameters = (κ=κ, ζ=1e-3, σ=σ, ν=1e-4, μ=1e-4)
 
-# Output
-output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/F-GD-B.h5", 
-    simulation_name=:parameters, resume=true, #physical_transform=inverse_transformation!, 
-    storage_limit="50 GB")
+    # Collection of specifications defining the problem to be solved
+    prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=1e-1,
+        operators=:all, diagnostics=diagnostics)
 
-## Solve and plot
-sol = spectral_solve(prob, MSS3(), output)
+    # Inverse transform
+    #inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
 
-close(output)
+    # Output
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/F-GD-B.h5", 
+        simulation_name=:parameters, resume=true, #physical_transform=inverse_transformation!, 
+        storage_limit="50 GB")
+
+    ## Solve and plot
+    sol = spectral_solve(prob, MSS3(), output)
+
+    close(output)
+
+end

@@ -18,23 +18,22 @@ end
 
 # Non-linear operator, fully non-linear
 function NonLinear(du, u, operators, p, t)
-    @unpack solve_phi, diff_x, diff_y = operators
-    @unpack poisson_bracket, grad_dot_grad, spectral_expm1 = operators
+    @unpack solve_phi, poisson_bracket, grad_dot_grad, diff_x, diff_y = operators
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
     @unpack ζ, σ, ν, κ = p
     ϕ = solve_phi(η, Ω)
 
-    dη .= poisson_bracket(η, ϕ) - (1 - ζ) * diff_y(ϕ) - ζ * diff_y(η) +
-          ν * κ * grad_dot_grad(η, η) - 2ν * κ * diff_x(η) - (σ / κ) * spectral_expm1(-κ * ϕ)
-    dΩ .= poisson_bracket(Ω, ϕ) - ζ * diff_y(η) - (σ / κ) * spectral_expm1(-κ * ϕ)
+    dη .= poisson_bracket(η, ϕ) - (κ - ζ) * diff_y(ϕ) - ζ * diff_y(η) +
+          ν * grad_dot_grad(η, η) - 2ν * κ * diff_x(η) + σ * ϕ
+    dΩ .= poisson_bracket(Ω, ϕ) - ζ * diff_y(η) + σ * ϕ
 
     CUDA.@allowscalar dη[1] = 0
     CUDA.@allowscalar dΩ[1] = 0
 end
 
 # Time intervalparameters
-tspan = [0.0, 10_000] # 10_000_000.0]
+tspan = [0.0, 1_000_000] # 10_000_000.0]
 
 # Diagnostics
 diagnostics = @diagnostics [
@@ -49,22 +48,22 @@ diagnostics = @diagnostics [
     sample_potential(; storage_limit="15 GB"),
 ]
 
-sigmas = [1e-2, 2e-2, 5e-2, 1e-1]
+sigmas = [1e-4, 2e-4, 5e-4, 1e-3]
 
 for σ in sigmas
     # Parameters
     κ = 1e-2
-    parameters = (κ=κ, ζ=1e-1, σ=σ, ν=1e-2, μ=1e-2)
+    parameters = (κ=κ, ζ=1e-3, σ=σ, ν=1e-4, μ=1e-4)
 
     # Collection of specifications defining the problem to be solved
-    prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=1e-3,
+    prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=1e-1,
         operators=:all, diagnostics=diagnostics)
 
     # Inverse transform
     #inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/F-GD-GB.h5", 
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/LS-GD-B.h5", 
         simulation_name=:parameters, resume=true, #physical_transform=inverse_transformation!, 
         storage_limit="50 GB")
 
@@ -72,4 +71,5 @@ for σ in sigmas
     sol = spectral_solve(prob, MSS3(), output)
 
     close(output)
+
 end

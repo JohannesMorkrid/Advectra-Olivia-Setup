@@ -18,16 +18,14 @@ end
 
 # Non-linear operator, fully non-linear
 function NonLinear(du, u, operators, p, t)
-    @unpack solve_phi, diff_x, diff_y = operators
-    @unpack poisson_bracket, grad_dot_grad, spectral_expm1 = operators
+    @unpack solve_phi, poisson_bracket, diff_y = operators
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
-    @unpack ζ, σ, ν, κ = p
+    @unpack ζ, σ = p
     ϕ = solve_phi(η, Ω)
 
-    dη .= poisson_bracket(η, ϕ) - (1 - ζ) * diff_y(ϕ) - ζ * diff_y(η) +
-          ν * κ * grad_dot_grad(η, η) - 2ν * κ * diff_x(η) - (σ / κ) * spectral_expm1(-κ * ϕ)
-    dΩ .= poisson_bracket(Ω, ϕ) - ζ * diff_y(η) - (σ / κ) * spectral_expm1(-κ * ϕ)
+    dη .= poisson_bracket(η, ϕ) - (1 - ζ) * diff_y(ϕ) - ζ * diff_y(η) + σ * ϕ
+    dΩ .= poisson_bracket(Ω, ϕ) - ζ * diff_y(η) + σ * ϕ
 
     CUDA.@allowscalar dη[1] = 0
     CUDA.@allowscalar dΩ[1] = 0
@@ -64,7 +62,7 @@ for σ in sigmas
     #inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/F-GD-GB.h5", 
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/SD-LS-GD-GB.h5", 
         simulation_name=:parameters, resume=true, #physical_transform=inverse_transformation!, 
         storage_limit="50 GB")
 
