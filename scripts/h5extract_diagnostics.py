@@ -105,7 +105,7 @@ def extract_data(input_path, output_path, to_extract, force=False):
 
             sim_out = output_file.require_group(simulation)
 
-            print("Copying attributes")
+            print("  Copying attributes")
             for k, v in sim_in.attrs.items():
                 sim_out.attrs[k] = v
 
