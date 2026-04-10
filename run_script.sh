@@ -11,13 +11,10 @@
 module load NRIS/CPU  
 module load h5py
 
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-export HDF5_USE_FILE_LOCKING=FALSE
+# Usage - single file mode:
+#   sbatch run.sh -p /data -i input.h5 -o output.h5 -d "All probe,ExB CFL"
+# Usage - batch mode:
+#   sbatch run.sh -p /data -F input1.h5 input2.h5 -s probes -d "All probe,ExB CFL"
+# Append --force to overwrite existing output files.
 
-python scripts/h5extract_diagnostics.py \
-    --input "$1" \
-    --output "$2" \
-    --diagnostics "$3" \
-    ${4:+--force}
+python scripts/extract-diagnostics.py "$@"

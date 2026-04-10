@@ -2,6 +2,12 @@
 """
 Extract specific diagnostics from an HDF5 file into a new HDF5 file,
 while preserving the metadata.
+
+Single file mode:
+    python extract-diagnostics.py -p /data -i input.h5 -o output.h5 -d "All probe,ExB CFL"
+
+Batch mode:
+    python extract-diagnostics.py -p /data --files input1.h5 input2.h5 --suffix probes -d "All probe"
 """
 
 import argparse
@@ -16,15 +22,32 @@ def parse_args():
         description="Extract specific diagnostics from an HDF5 file into a new HDF5 file, "
                     "while preserving the metadata."
     )
-    parser.add_argument(
+
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(
         "--input", "-i",
-        required=True,
-        help="Path to the input HDF5 file"
+        help="Path to a single input HDF5 file"
+    )
+    mode.add_argument(
+        "--files", "-F",
+        nargs="+",
+        metavar="FILE",
+        help="One or more input filenames (used together with --path and --suffix)"
+    )
+
+    parser.add_argument(
+        "--path", "-p",
+        default=".",
+        help="Base directory for input and output files (default: current directory)"
+    )
+    parser.add_argument(
+        "--suffix", "-s",
+        default="extracted",
+        help='Suffix to append to each filename for the output (default: "extracted", produces e.g. input1_extracted.h5)'
     )
     parser.add_argument(
         "--output", "-o",
-        required=True,
-        help="Path to the output HDF5 file (will be created)"
+        help="Path to the output HDF5 file (single file mode only)"
     )
     parser.add_argument(
         "--diagnostics", "--groups", "-d", "-g",
@@ -36,17 +59,27 @@ def parse_args():
     parser.add_argument(
         "--force", "-f",
         action="store_true",
-        help="Overwrite the output file if it already exists"
+        help="Overwrite output file(s) if they already exist"
     )
-    return parser.parse_args()
+
+    args = parser.parse_args()
+
+    if args.input and not args.output:
+        parser.error("--input requires --output")
+
+    if args.input and args.suffix != "extracted":
+        warnings.warn("--suffix is ignored in single file mode, use --output to specify the output path.")
+
+    if args.files and args.output:
+        warnings.warn("--output is ignored in batch mode, output filenames are derived from --files and --suffix.")
+
+    return args
 
 
 def extract_data(input_path, output_path, to_extract, force=False):
-    # Validate input path
     if not os.path.isfile(input_path):
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    # Guard against overwrite
     if os.path.isfile(output_path):
         if force:
             os.remove(output_path)
@@ -55,7 +88,6 @@ def extract_data(input_path, output_path, to_extract, force=False):
                 f"Output file already exists: {output_path}  — use --force to overwrite."
             )
 
-    # Ensure parent directory exists
     out_dir = os.path.dirname(output_path)
     if out_dir and not os.path.isdir(out_dir):
         os.makedirs(out_dir)
@@ -77,7 +109,6 @@ def extract_data(input_path, output_path, to_extract, force=False):
             for k, v in sim_in.attrs.items():
                 sim_out.attrs[k] = v
 
-            # Copy requested groups
             available = list(sim_in.keys())
             for group_name in to_extract:
                 if group_name in available:
@@ -95,10 +126,39 @@ def extract_data(input_path, output_path, to_extract, force=False):
                     )
 
 
+def make_output_path(base_dir, filename, suffix):
+    """Insert suffix before the file extension, e.g. input1.h5 -> input1_probes.h5"""
+    name, ext = os.path.splitext(filename)
+    return os.path.join(base_dir, f"{name}_{suffix}{ext}")
+
+
 def main():
     args = parse_args()
     to_extract = [s.strip() for s in args.diagnostics.split(",")]
-    extract_data(args.input, args.output, to_extract, force=args.force)
+
+    if args.input:
+        # Single file mode
+        input_path = os.path.join(args.path, args.input)
+        output_path = os.path.join(args.path, args.output)
+        extract_data(input_path, output_path, to_extract, force=args.force)
+    else:
+        # Batch mode
+        errors = []
+        for filename in args.files:
+            input_path = os.path.join(args.path, filename)
+            output_path = make_output_path(args.path, filename, args.suffix)
+            print(f"\n{'='*60}")
+            print(f"Processing: {input_path} → {output_path}")
+            print('='*60)
+            try:
+                extract_data(input_path, output_path, to_extract, force=args.force)
+            except (FileNotFoundError, FileExistsError) as e:
+                print(f"Error: {e}", file=sys.stderr)
+                errors.append(filename)
+
+        if errors:
+            print(f"\nFailed for {len(errors)} file(s): {', '.join(errors)}", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
