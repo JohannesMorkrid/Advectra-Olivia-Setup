@@ -28,8 +28,8 @@ LocalPreferences.toml
 JuliaLocalPreferences.toml
 
 # HPC related
-output-*
-error-*
+*output-*
+*error-*
 
 # Output files
 *.h5
