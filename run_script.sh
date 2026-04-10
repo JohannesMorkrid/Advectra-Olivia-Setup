@@ -17,4 +17,4 @@ module load h5py
 #   sbatch run.sh -p /data -F input1.h5 input2.h5 -s probes -d "All probe,ExB CFL"
 # Append --force to overwrite existing output files.
 
-python scripts/extract-diagnostics.py "$@"
+python scripts/h5extract_diagnostics.py "$@"
