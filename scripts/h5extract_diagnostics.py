@@ -8,6 +8,9 @@ Single file mode:
 
 Batch mode:
     python extract-diagnostics.py -p /data --files input1.h5 input2.h5 --suffix probes -d "All probe"
+
+Filter by simulation index:
+    python extract-diagnostics.py -p /data -i input.h5 -o output.h5 -d "All probe" -n 0:3
 """
 
 import argparse
@@ -57,6 +60,12 @@ def parse_args():
         help='Comma-separated list of group names to extract (e.g. "All probe,ExB CFL")'
     )
     parser.add_argument(
+        "--index", "-n",
+        default=None,
+        metavar="INDEX",
+        help="Select simulations by index: a single index (-n 0), a comma-separated list (-n 0,2,4), or a slice (-n 0:5 or -n ::2). Negative indices are supported (-n -1 for last). Default: all simulations."
+    )
+    parser.add_argument(
         "--force", "-f",
         action="store_true",
         help="Overwrite output file(s) if they already exist"
@@ -76,7 +85,27 @@ def parse_args():
     return args
 
 
-def extract_data(input_path, output_path, to_extract, force=False):
+def parse_index(index_str, total):
+    """Parse an index string into a set of valid integer indices."""
+    index_str = index_str.strip()
+
+    if ":" in index_str:
+        parts = [int(p) if p else None for p in index_str.split(":")]
+        return set(range(*slice(*parts).indices(total)))
+
+    indices = set()
+    for part in index_str.split(","):
+        i = int(part.strip())
+        if i < 0:
+            i += total
+        if 0 <= i < total:
+            indices.add(i)
+        else:
+            warnings.warn(f"Index {int(part.strip())} out of range (0–{total - 1}) - skipping.")
+    return indices
+
+
+def extract_data(input_path, output_path, to_extract, index_str=None, force=False):
     if not os.path.isfile(input_path):
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
@@ -96,8 +125,19 @@ def extract_data(input_path, output_path, to_extract, force=False):
     with h5py.File(input_path, "r") as input_file, \
          h5py.File(output_path, "w") as output_file:
 
-        simulations = list(input_file.keys())
-        print(f"Found {len(simulations)} simulation(s): {', '.join(simulations)}")
+        all_simulations = list(input_file.keys())
+        print(f"Found {len(all_simulations)} simulation(s):")
+        for i, s in enumerate(all_simulations):
+            print(f"  [{i}] {s}")
+
+        if index_str is not None:
+            index_set = parse_index(index_str, len(all_simulations))
+            simulations = [all_simulations[i] for i in index_set]
+        else:
+            simulations = all_simulations
+
+        if not simulations:
+            warnings.warn("No simulations remaining after filtering - output file will be empty.")
 
         for simulation in simulations:
             sim_in = input_file[simulation]
@@ -140,7 +180,8 @@ def main():
         # Single file mode
         input_path = os.path.join(args.path, args.input)
         output_path = os.path.join(args.path, args.output)
-        extract_data(input_path, output_path, to_extract, force=args.force)
+        extract_data(input_path, output_path, to_extract,
+                     index_str=args.index, force=args.force)
     else:
         # Batch mode
         errors = []
@@ -151,7 +192,8 @@ def main():
             print(f"Processing: {input_path} → {output_path}")
             print('='*60)
             try:
-                extract_data(input_path, output_path, to_extract, force=args.force)
+                extract_data(input_path, output_path, to_extract,
+                             index_str=args.index, force=args.force)
             except (FileNotFoundError, FileExistsError) as e:
                 print(f"Error: {e}", file=sys.stderr)
                 errors.append(filename)
