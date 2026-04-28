@@ -1,9 +1,8 @@
-
 ## Run all (alt+enter)
 using Advectra
 using CUDA
 
-domain = Domain(256, 256; Lx=48, Ly=48, MemoryType=CuArray, precision=Float64)
+domain = Domain(1024, 1024; Lx=200, Ly=200, MemoryType=CuArray, precision=Float64)
 ic = initial_condition(random_crossphased, domain; value=1e-3)
 
 # Linear operator
@@ -31,40 +30,50 @@ function NonLinear(du, u, operators, p, t)
     CUDA.@allowscalar dΩ[1] = 0
 end
 
-# Time intervalparameters
-tspan = [0.0, 10_000] # 10_000_000.0]
-
 # Diagnostics
 diagnostics = @diagnostics [
-    progress(; stride=1000),
-    probe_all(; positions=[(x, 0) for x in LinRange(-24, 19.2, 10)], stride=100),
+    progress(; stride=5000),
+    probe_all(; positions=[(x, 0) for x in LinRange(-24, 19.2, 10)], stride=10),
     get_log_modes(; stride=50, axis=:diag),
-    kinetic_energy_integral(; stride=500),
-    potential_energy_integral(; stride=500),
+    kinetic_energy_integral(; stride=50),
+    potential_energy_integral(; stride=50),
     cfl(; stride=5000, silent=true),
-    sample_density(; storage_limit="15 GB"),
-    sample_vorticity(; storage_limit="15 GB"),
-    sample_potential(; storage_limit="15 GB"),
+    sample_density(; storage_limit="2 GB"),
+    sample_vorticity(; storage_limit="2 GB"),
+    sample_potential(; storage_limit="2 GB")
 ]
 
+gammas = [0.20705825, 0.20496542, 0.20082876, 0.19619285, 0.18968598, 0.17695927,
+    0.16294017, 0.14378273, 0.10855735, 0.07417678]
 sigmas = [1e-3, 2e-3, 5e-3, 1e-2, 2e-2, 5e-2, 1e-1, 2e-1, 5e-1, 1]
 
-for σ in sigmas
+if haskey(ENV, "SLURM_ARRAY_TASK_ID")
+    idx = parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
+    sigmas = sigmas[idx]
+    gammas = gammas[idx]
+elseif length(ARGS) == 1
+    idx = parse(Int, first(ARGS))
+    sigmas = sigmas[idx]
+    gammas = gammas[idx]
+end
+
+for (σ, γ) in zip(sigmas, gammas)
     # Parameters
-    κ = 1e-2
-    parameters = (κ=κ, ζ=1e-1, σ=σ, ν=1e-2, μ=1e-2)
+    parameters = (ζ=1e-1, σ=σ, ν=1e-2, μ=1e-2)
+
+    # Time parameters
+    dt = 5e-5 / γ
+    tspan = [0.0, 500_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
-    prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=1e-3,
+    prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=dt,
         operators=:all, diagnostics=diagnostics)
 
-    # Inverse transform
-    #inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
-
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/SD-LS-GD-GB.h5", 
-        simulation_name=:parameters, resume=true, #physical_transform=inverse_transformation!, 
-        storage_limit="50 GB")
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/SD-LS-GD-GB_sigma=$σ.h5",
+        simulation_name=:parameters, resume=true, storage_limit="10 GB")
+
+    println("Running simulation for σ=$σ with γ=$γ:")
 
     ## Solve and plot
     sol = spectral_solve(prob, MSS3(), output)
