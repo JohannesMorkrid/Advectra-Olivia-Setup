@@ -2,7 +2,7 @@
 using Advectra
 using CUDA
 
-domain = Domain(512, 512; Lx=48, Ly=48, MemoryType=CuArray)
+domain = Domain(256, 256; Lx=48, Ly=48, MemoryType=CuArray)
 ic = initial_condition(random_crossphased, domain; value=1e-3, include_zonal=true, include_streamer=true)
 
 # Linear operator
@@ -59,14 +59,14 @@ for (σ, γ) in zip(sigmas, gammas)
 
     # Time parameters
     dt = 1e-4 / γ
-    tspan = [0.0, 75_000 * dt] # 10_000_000
+    tspan = [0.0, 800_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
     prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=dt,
         operators=:all, diagnostics=diagnostics)
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/judith_sim.h5",
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/judith_sim_N-256.h5",
         simulation_name=:parameters, resume=true, storage_limit="50 GB")
 
     println("Running simulation for σ=$σ with γ=$γ:")
