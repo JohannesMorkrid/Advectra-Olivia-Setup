@@ -2,8 +2,8 @@
 using Advectra
 using CUDA
 
-domain = Domain(1024, 1024; Lx=200, Ly=200, MemoryType=CuArray, precision=Float64)
-ic = initial_condition(random_crossphased, domain; value=1e-3)
+domain = Domain(256, 256; Lx=48, Ly=48, MemoryType=CuArray)
+ic = initial_condition(random_crossphased, domain; value=1e-3, include_zonal=true, include_streamer=true)
 
 # Linear operator
 function Linear(du, u, operators, p, t)
@@ -28,6 +28,7 @@ function NonLinear(du, u, operators, p, t)
 
     CUDA.@allowscalar dη[1] = 0
     CUDA.@allowscalar dΩ[1] = 0
+    remove_nyquist_modes!(du, domain)
 end
 
 # Diagnostics
@@ -38,6 +39,12 @@ diagnostics = @diagnostics [
     kinetic_energy_integral(; stride=50),
     potential_energy_integral(; stride=50),
     cfl(; stride=5000, silent=true),
+    kinetic_energy_spectrum(stride=500 , spectrum=:radial),
+    kinetic_energy_spectrum(stride=500 , spectrum=:poloidal),
+    kinetic_energy_spectrum(stride=500 , spectrum=:wavenumber),
+    potential_energy_spectrum(stride=500 , spectrum=:radial),
+    potential_energy_spectrum(stride=500 , spectrum=:poloidal),
+    potential_energy_spectrum(stride=500 , spectrum=:wavenumber),
     sample_density(; storage_limit="2 GB"),
     sample_vorticity(; storage_limit="2 GB"),
     sample_potential(; storage_limit="2 GB")
@@ -62,16 +69,16 @@ for (σ, γ) in zip(sigmas, gammas)
     parameters = (ζ=1e-1, σ=σ, ν=1e-2, μ=1e-2)
 
     # Time parameters
-    dt = 5e-5 / γ
-    tspan = [0.0, 500_000 * dt] # 10_000_000
+    dt = 2e-4 / γ
+    tspan = [0.0, 50_000_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
     prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=dt,
         operators=:all, diagnostics=diagnostics)
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/SD-LS-GD-GB_sigma=$σ.h5",
-        simulation_name=:parameters, resume=true, storage_limit="10 GB")
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/SD-LS-GD-GB_sigma=$(σ)_resim.h5",
+        simulation_name=:parameters, resume=true, storage_limit="100 GB")
 
     println("Running simulation for σ=$σ with γ=$γ:")
 
