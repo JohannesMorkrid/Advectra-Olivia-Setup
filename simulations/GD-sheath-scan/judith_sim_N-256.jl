@@ -66,7 +66,7 @@ for (σ, γ) in zip(sigmas, gammas)
         operators=:all, diagnostics=diagnostics)
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/GD-sheath-scan/judith_sim_N-256.h5",
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/judith_sim_N-256.h5",
         simulation_name=:parameters, resume=true, storage_limit="50 GB")
 
     println("Running simulation for σ=$σ with γ=$γ:")
