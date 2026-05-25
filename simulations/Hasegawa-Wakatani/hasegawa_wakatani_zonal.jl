@@ -16,7 +16,7 @@ function Linear!(du, u, operators, parameters, t)
 end
 
 # Non-linear operator, fully non-linear
-function NonLinear!(du, u, operators, p, t)
+function NonLinear!(du, u, operators, parameters, t)
     @unpack solve_phi, poisson_bracket, diff_y = operators
     n, Ω = eachslice(u; dims=3)
     dn, dΩ = eachslice(du; dims=3)
@@ -33,7 +33,7 @@ end
 diagnostics = @diagnostics [
     progress(; stride=5000),
     # Probes
-    probe_all(; positions=[(x, 0) for x in LinRange(-20.944, 16.7552, 10)], stride=10),
+    probe_all(; positions=[(x, 0) for x in LinRange(-π / 0.15, 16.755160819145562, 10)], stride=10),
     # Energy integrals
     kinetic_energy_integral(; stride=50),
     potential_energy_integral(; stride=50),
