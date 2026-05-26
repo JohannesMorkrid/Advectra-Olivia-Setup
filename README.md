@@ -28,3 +28,11 @@ ssh through a normal terminal and run
 ```bash
   pkill -u $USER -f vscode-server
 ```
+
+## To download data
+
+Best and fastest way is to use rsync
+
+```bash
+rsync -avz -P joemork@olivia.sigma2.no:/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/judith_sim_N-512.h5 .
+```
