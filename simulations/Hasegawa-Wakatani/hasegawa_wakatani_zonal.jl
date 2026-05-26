@@ -93,7 +93,7 @@ for (C, γ) in zip(Cs, gammas)
         operators=:all, diagnostics=diagnostics) #additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/Hasegawa-Wakatani/HW_C-$(C).h5",
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/Hasegawa-Wakatani/HW_C-$(C)_zonal.h5",
         simulation_name=:parameters, resume=true, storage_limit="100 GB")
 
     println("Running simulation for C=$C with γ=$γ:")
