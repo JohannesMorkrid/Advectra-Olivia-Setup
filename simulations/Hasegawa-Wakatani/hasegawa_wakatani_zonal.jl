@@ -82,7 +82,7 @@ end
 
 for (C, γ) in zip(Cs, gammas)
     # Parameters
-    parameters = (C=C, ν=1e-2, μ=1e-2) #ν=1e-4, μ=1e-4
+    parameters = (C=C, ν=1e-4, μ=1e-4)
 
     # Time parameters
     dt = 2e-4 / γ
@@ -90,7 +90,7 @@ for (C, γ) in zip(Cs, gammas)
 
     # Collection of specifications defining the problem to be solved
     prob = SpectralODEProblem(Linear!, NonLinear!, ic, domain, tspan; p=parameters, dt=dt,
-        operators=:all, diagnostics=diagnostics) #additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
+        operators=:all, diagnostics=diagnostics, additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
 
     # Output
     output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/Hasegawa-Wakatani/HW_C-$(C)_zonal.h5",
