@@ -7,12 +7,12 @@ ic = initial_condition(random_crossphased, domain; value=1e-3, include_zonal=tru
 
 # Linear operator
 function Linear!(du, u, operators, parameters, t)
-    @unpack laplacian = operators
+    @unpack hyper_laplacian = operators
     n, Ω = eachslice(u; dims=3)
     dn, dΩ = eachslice(du; dims=3)
     @unpack ν, μ = parameters
-    dn .= ν * laplacian(n)
-    dΩ .= μ * laplacian(Ω)
+    dn .= ν * hyper_laplacian(n)
+    dΩ .= μ * hyper_laplacian(Ω)
 end
 
 # Non-linear operator, fully non-linear
@@ -65,7 +65,7 @@ diagnostics = @diagnostics [
     sample_potential(; storage_limit="2 GB")
 ]
 
-gammas = [0.07856526, 0.13880677, 0.14947481, 0.13908339, 0.1068677,  0.06650772, 0.02906377]
+gammas = [0.2, 0.13880677, 0.14947481, 0.13908339, 0.1068677,  0.06650772, 0.05]
 Cs = [0.01, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0]
 
 if haskey(ENV, "SLURM_ARRAY_TASK_ID")
@@ -91,7 +91,7 @@ for (C, γ) in zip(Cs, gammas)
         operators=:all, diagnostics=diagnostics, additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/Hasegawa-Wakatani/HW_C-$(C).h5",
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/Hasegawa-Wakatani/HW_C-$(C)_hyper.h5",
         simulation_name=:parameters, resume=true, storage_limit="100 GB")
 
     println("Running simulation for C=$C with γ=$γ:")
