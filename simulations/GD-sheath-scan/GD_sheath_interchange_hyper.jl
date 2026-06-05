@@ -88,7 +88,7 @@ for (σ, γ) in zip(sigmas, gammas)
 
     # Collection of specifications defining the problem to be solved
     prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=dt,
-        operators=:all, diagnostics=diagnostics, additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)]))
+        operators=:all, diagnostics=diagnostics, additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
 
     # Output
     output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/GDSI_sigma-$(σ)_hyper.h5",
