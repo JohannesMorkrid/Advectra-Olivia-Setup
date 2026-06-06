@@ -25,18 +25,14 @@ function NonLinear(du, u, operators, p, t)
 
     dη .= poisson_bracket(η, ϕ) - (1 - ζ) * diff_y(ϕ) - ζ * diff_y(η) + σ * ϕ
     dΩ .= poisson_bracket(Ω, ϕ) - ζ * diff_y(η) + σ * ϕ
-
-    CUDA.@allowscalar dη[1] = 0
-    CUDA.@allowscalar dΩ[1] = 0
-    remove_nyquist_modes!(du, domain)
 end
 
 # Diagnostics
 diagnostics = @diagnostics [
-    progress(; stride=5000),
-    sample_density(; stride=25),
-    sample_vorticity(; stride=25),
-    sample_potential(; stride=25)
+    progress(; stride=50000),
+    #sample_density(; stride=25),
+    #sample_vorticity(; stride=25),
+    sample_potential(; stride=250)
 ]
 
 gammas = [0.20705825, 0.20496542, 0.20082876, 0.19619285, 0.18968598, 0.17695927,
@@ -59,14 +55,14 @@ for (σ, γ) in zip(sigmas, gammas)
 
     # Time parameters
     dt = 1e-4 / γ
-    tspan = [0.0, 800_000 * dt] # 10_000_000
+    tspan = [0.0, 8_000_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
     prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=dt,
         operators=:all, diagnostics=diagnostics)
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/judith_sim_N-256.h5",
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/Diffusion_N-256.h5",
         simulation_name=:parameters, resume=true, storage_limit="50 GB")
 
     println("Running simulation for σ=$σ with γ=$γ:")
