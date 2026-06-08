@@ -80,7 +80,7 @@ end
 
 for (σ, γ) in zip(sigmas, gammas)
     # Parameters
-    parameters = (ζ=1e-1, σ=σ, ν=1e-4, μ=1e-4)
+    parameters = (ζ=1e-1, σ=σ, ν=2e-5, μ=2e-5)
 
     # Time parameters
     dt = 2e-4 / γ
