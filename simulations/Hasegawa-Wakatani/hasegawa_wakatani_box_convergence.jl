@@ -57,7 +57,7 @@ if haskey(ENV, "SLURM_ARRAY_TASK_ID")
     idx = parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
     Cs = Cs[mod1(idx,7)]
     gammas = gammas[mod1(idx,7)]
-    L = LS[cld(idx,7)]
+    L = Ls[cld(idx,7)]
 elseif length(ARGS) == 1
     idx = parse(Int, first(ARGS))
     Cs = Cs[idx]
