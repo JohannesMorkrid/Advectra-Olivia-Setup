@@ -12,7 +12,7 @@ function Linear(du, u, operators, p, t)
     dη, dΩ = eachslice(du; dims=3)
     @unpack ν, μ, ν_h, μ_h = p
     dη .= ν * laplacian(η) + ν_h*hyper_laplacian(η)
-    dΩ .= μ * laplacian(Ω) + μ_h*hyper_laplacian(η)
+    dΩ .= μ * laplacian(Ω) + μ_h*hyper_laplacian(Ω)
 end
 
 # Non-linear operator, fully non-linear
