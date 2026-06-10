@@ -6,7 +6,7 @@ domain = Domain(256, 256; Lx=48, Ly=48, MemoryType=CuArray)
 ic = initial_condition(random_crossphased, domain; value=1e-3, include_zonal=true, include_streamer=true)
 
 # Linear operator
-function Linear(du, u, operators, p, t)
+function Linear!(du, u, operators, p, t)
     @unpack laplacian, hyper_laplacian = operators
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
@@ -16,7 +16,7 @@ function Linear(du, u, operators, p, t)
 end
 
 # Non-linear operator, fully non-linear
-function NonLinear(du, u, operators, p, t)
+function NonLinear!(du, u, operators, p, t)
     @unpack solve_phi, poisson_bracket, diff_y = operators
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
@@ -84,10 +84,10 @@ for (σ, γ) in zip(sigmas, gammas)
 
     # Time parameters
     dt = 2e-4 / γ
-    tspan = [0.0, 50_000_000 * dt/10] # 10_000_000
+    tspan = [0.0, 50_000_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
-    prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=dt,
+    prob = SpectralODEProblem(Linear!, NonLinear!, ic, domain, tspan; p=parameters, dt=dt,
         operators=:all, diagnostics=diagnostics, additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
 
     # Output
