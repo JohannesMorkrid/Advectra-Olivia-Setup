@@ -34,7 +34,7 @@ Ls = [24, 36, 48]
 if haskey(ENV, "SLURM_ARRAY_TASK_ID")
     idx = parse(Int, ENV["SLURM_ARRAY_TASK_ID"])
     N = Ns[mod1(idx, length(Ns))]
-    L = Ls[cld(idx, length(Ns))]*128/N
+    L = Ls[cld(idx, length(Ns))]*N/128
 
     sigmas = sigmas[4] # 0.01 fixed
     gammas = gammas[4]
