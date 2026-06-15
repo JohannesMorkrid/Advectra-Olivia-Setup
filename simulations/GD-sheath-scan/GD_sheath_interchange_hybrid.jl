@@ -83,7 +83,7 @@ for (σ, γ) in zip(sigmas, gammas)
     parameters = (ζ=1e-1, σ=σ, ν=1e-2, μ=1e-2, ν_h=2e-6, μ_h=2e-6)
 
     # Time parameters
-    dt = 4e-4 / γ
+    dt = 2e-4 / γ
     tspan = [0.0, 50_000_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
