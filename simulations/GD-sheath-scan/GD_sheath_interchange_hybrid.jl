@@ -2,7 +2,7 @@
 using Advectra
 using CUDA
 
-domain = Domain(256, 256; Lx=48, Ly=48, MemoryType=CuArray)
+domain = Domain(512, 512; Lx=144, Ly=144, MemoryType=CuArray)
 ic = initial_condition(random_crossphased, domain; value=1e-3, include_zonal=true, include_streamer=true)
 
 # Linear operator
@@ -83,7 +83,7 @@ for (σ, γ) in zip(sigmas, gammas)
     parameters = (ζ=1e-1, σ=σ, ν=1e-2, μ=1e-2, ν_h=2e-6, μ_h=2e-6)
 
     # Time parameters
-    dt = 2e-4 / γ
+    dt = 4e-4 / γ
     tspan = [0.0, 50_000_000 * dt] # 10_000_000
 
     # Collection of specifications defining the problem to be solved
@@ -91,10 +91,10 @@ for (σ, γ) in zip(sigmas, gammas)
         operators=:all, diagnostics=diagnostics, additional_operators=[OperatorRecipe(:laplacian; order=3, alias=:hyper_laplacian)])
 
     # Output
-    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/GDSI_sigma-$(σ)_hybrid.h5",
+    output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/GDSI_sigma-$(σ)_L-$(domain.Lx)_hybrid.h5",
         simulation_name=:parameters, resume=true, storage_limit="100 GB")
 
-    println("Running simulation for σ=$σ with γ=$γ:")
+    println("Running simulation for σ=$σ with γ=$γ and L=$(domain.Lx):")
 
     ## Solve and plot
     sol = spectral_solve(prob, MSS3(), output)
