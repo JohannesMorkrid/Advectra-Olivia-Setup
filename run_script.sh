@@ -17,4 +17,5 @@ module load h5py
 #   sbatch run.sh -p /data -F input1.h5 input2.h5 -s probes -d "All probe,ExB CFL"
 # Append --force to overwrite existing output files.
 
-python scripts/h5extract_diagnostics.py "$@"
+#python scripts/h5extract_diagnostics.py "$@"
+python scripts/h5extract_diagnostics.py -p /cluster/work/projects/nn12110k/joemork/GD-sheath-scan --files GDSI_sigma-0.001_hybrid.h5 GDSI_sigma-0.005_hybrid.h5 GDSI_sigma-0.02_hybrid.h5 GDSI_sigma-0.1_hybrid.h5 GDSI_sigma-0.5_hybrid.h5 GDSI_sigma-0.002_hybrid.h5 GDSI_sigma-0.01_hybrid.h5 GDSI_sigma-0.05_hybrid.h5 GDSI_sigma-0.2_hybrid.h5 GDSI_sigma-1.0_hybrid.h5 --suffix cfl -d "ExB CFL"
