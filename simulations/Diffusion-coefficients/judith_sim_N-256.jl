@@ -30,7 +30,7 @@ end
 # Diagnostics
 diagnostics = @diagnostics [
     progress(; stride=50000),
-    #sample_density(; stride=25),
+    sample_density(; stride=250),
     #sample_vorticity(; stride=25),
     sample_potential(; stride=250)
 ]
@@ -63,7 +63,7 @@ for (σ, γ) in zip(sigmas, gammas)
 
     # Output
     output = Output(prob; filename="/cluster/work/projects/nn12110k/joemork/GD-sheath-scan/Diffusion_N-256.h5",
-        simulation_name=:parameters, resume=true, storage_limit="50 GB")
+        simulation_name=:parameters, resume=true, storage_limit="100 GB")
 
     println("Running simulation for σ=$σ with γ=$γ:")
 
